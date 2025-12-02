@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yazı Tura Oyunu (Web Sitesi) 👑 V 4.0</title>
+    <title>Yazı Tura Oyunu (Web Sitesi) 👑 V 4.2 - YT Linki Eklendi</title>
     <style>
         /*
         * --- CSS DEĞİŞKENLERİ (TEMA VE RENKLER) ---
@@ -200,7 +200,7 @@
             }
         }
 
-        /* Footer */
+        /* Footer Stili (Linkler için esnek yapı) */
         .footer {
             position: fixed;
             bottom: 0;
@@ -213,6 +213,21 @@
             color: #7f8c8d;
             font-weight: 500;
             z-index: 11;
+            display: flex;
+            justify-content: center;
+            gap: 15px; /* Boşluk ekleme */
+        }
+        
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .footer a:hover {
+            color: var(--text-color);
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -242,12 +257,13 @@
     </div>
 
     <div class="footer">
-        GEMİNİ TARAFINDAN YAPILDI
+        <span>GEMİNİ TARAFINDAN YAPILDI</span>
+        <a href="https://youtube.com/@necronvo" target="_blank">YouTube Kanalı</a>
     </div>
 
     <script>
         // --- SÜRÜM NUMARASI ---
-        const GAME_VERSION = "V 4.0"; 
+        const GAME_VERSION = "V 4.2"; 
 
         // --- GLOBAL DEĞİŞKENLER ---
         let yaziCount = 0;
@@ -271,8 +287,6 @@
         // --- SES YERİNE KONSOL UYARISI ---
         function playSound(soundType) {
              console.log(`[SES] ${soundType} sesi tetiklendi.`);
-             // İstenirse burada tarayıcının yerleşik uyarı sesi tetiklenebilir:
-             // new Audio('data:audio/wav;base64,UklGRl9QD...').play(); // Daha gelişmiş kod gerektirir.
         }
         
         // --- TEMA DEĞİŞTİRME ---
@@ -403,8 +417,8 @@
             }
         }
 
-        // --- SAYFA YÜKLENİNCE (LOAD) BAŞLATMA ---
-        window.onload = function() {
+        // --- SAYFA YÜKLENİNCE BAŞLATMA (Garantili Başlangıç) ---
+        document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('version-display').textContent = GAME_VERSION; 
 
             initializeColors(); 
@@ -416,7 +430,8 @@
             
             document.getElementById('coin').textContent = "?";
             document.getElementById('coin').style.backgroundColor = originalSecondaryColor;
-        };
+        });
+
     </script>
 </body>
 </html>
