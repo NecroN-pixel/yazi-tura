@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yazı Tura Oyunu 👑 V 4.8 - Dikey İstatistikler</title>
+    <title>Yazı Tura Oyunu 👑 V 4.9.3 - Otomatik Durdurma Düzeltmesi</title>
     <style>
         /*
         * --- CSS DEĞİŞKENLERİ (TEMA VE RENKLER) ---
@@ -157,7 +157,6 @@
             display: flex;
             flex-direction: row; 
             gap: 10px;
-            margin-bottom: 25px;
             justify-content: center;
         }
         
@@ -177,15 +176,34 @@
             color: var(--card-color);
             background-color: var(--primary-color);
             box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            margin-bottom: 10px; 
         }
         
         .button-secondary {
             color: var(--text-color);
             background-color: #dfe6e9; 
         }
+        
+        /* Devre dışı bırakılmış butonlar için şeffaflık */
+        .button-main:disabled, .button-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Otomatik Atış Düğmesi için Özel Stil */
+        #auto-flip-button {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .button-auto-flip-active {
+            background-color: var(--yazi-color) !important; 
+            color: var(--card-color) !important;
+            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
+        }
 
         .score-board {
-            margin-top: 15px;
+            margin-top: 25px;
             padding: 15px;
             background-color: var(--background-color);
             border-radius: 15px;
@@ -333,6 +351,10 @@
             <button class="button-secondary" onclick="resetScore(true, true)">Skoru Sıfırla</button>
         </div>
         
+        <div class="auto-flip-control">
+            <button id="auto-flip-button" class="button-main" onclick="toggleAutoFlip()">Otomatik Atışı Başlat 🚀</button>
+        </div>
+        
         <div class="score-board">
             <h2>📊 Skor Durumu</h2>
             
@@ -363,13 +385,20 @@
 
     <script>
         // --- SÜRÜM NUMARASI ---
-        const GAME_VERSION = "V 4.8"; 
+        const GAME_VERSION = "V 4.9.3"; 
 
         // --- GLOBAL DEĞİŞKENLER ---
         let yaziCount = 0;
         let turaCount = 0;
         let totalCount = 0;
         let gameMode = 'series'; 
+        
+        let isAutoFlipping = false;
+        let autoFlipInterval; 
+        let stopPending = false; // YENİ BAYRAK: Durdurma isteği yapıldı, ancak atışın bitmesi bekleniyor.
+        const FLIP_INTERVAL_MS = 3000; 
+        
+        let currentFlipTimeout; 
 
         let originalPrimaryColor;
         let originalSecondaryColor;
@@ -385,17 +414,6 @@
             originalSecondaryColor = rootStyle.getPropertyValue('--secondary-color').trim();
             yaziColor = rootStyle.getPropertyValue('--yazi-color').trim();
             turaColor = rootStyle.getPropertyValue('--tura-color').trim();
-        }
-
-        // --- KALICI SKOR YÖNETİMİ ---
-        function loadScore() {
-            const storedScore = localStorage.getItem(STORAGE_KEY);
-            if (storedScore) {
-                const score = JSON.parse(storedScore);
-                yaziCount = score.yazi || 0;
-                turaCount = score.tura || 0;
-                totalCount = yaziCount + turaCount;
-            }
         }
 
         function saveScore() {
@@ -431,7 +449,7 @@
             document.querySelector('.container').style.borderColor = color;
         }
 
-        // --- YÜZDELİK DİKEY ÇUBUKLAR GÜNCELLEME (YENİ SİSTEM) ---
+        // --- YÜZDELİK DİKEY ÇUBUKLAR GÜNCELLEME ---
         function updateVerticalBars() {
             const yaziFill = document.querySelector('#yazi-bar .score-bar-fill');
             const turaFill = document.querySelector('#tura-bar .score-bar-fill');
@@ -446,16 +464,11 @@
                 return;
             }
 
-            // Kazanma oranına göre çubukların doluluk yüzdesi
             const yaziPercentage = (yaziCount / totalCount) * 100;
             const turaPercentage = (turaCount / totalCount) * 100;
 
-            // Dikey çubukların maksimum yüksekliği 30px (100%'e denk)
-            const yaziHeight = yaziPercentage; 
-            const turaHeight = turaPercentage;
-
-            yaziFill.style.height = `${yaziHeight}%`;
-            turaFill.style.height = `${turaHeight}%`;
+            yaziFill.style.height = `${yaziPercentage}%`;
+            turaFill.style.height = `${turaPercentage}%`;
 
             yaziPercentDisplay.textContent = `%${Math.round(yaziPercentage)}`;
             turaPercentDisplay.textContent = `%${Math.round(turaPercentage)}`;
@@ -478,6 +491,118 @@
             saveScore();
             updateVerticalBars(); // Dikey çubukları güncelle
         }
+        
+        // Otomatik Atışı Başlat/Durdur
+        function toggleAutoFlip() {
+            const coin = document.getElementById('coin');
+            const button = document.getElementById('auto-flip-button');
+            const mainFlipButton = document.querySelector('.button-main');
+            const secondaryButton = document.querySelector('.button-secondary'); 
+
+            if (isAutoFlipping) {
+                // *** DURDURMA İŞLEMİ (Kullanıcının istediği mantık burada) ***
+                clearInterval(autoFlipInterval); // Intervali durdur (Yeni atış gelmeyecek)
+                
+                const isCurrentlyFlipping = coin.classList.contains('flip-animation');
+
+                if (isCurrentlyFlipping) {
+                    // 1. Animasyon varsa: bitmesini bekle ve sonra dur
+                    stopPending = true; // Bayrağı ayarla
+                    
+                    button.textContent = 'Lütfen Bekleyiniz... ⏳';
+                    button.disabled = true; // Durdurma butonunu bekleme moduna al
+                    document.getElementById('result').textContent = "Mevcut atışın sonucu bekleniyor...";
+                    
+                    mainFlipButton.disabled = true; // Diğer butonlar da kilitli kalsın
+                    secondaryButton.disabled = true;
+
+                } else {
+                    // 2. Animasyon yoksa: hemen durdur
+                    isAutoFlipping = false; 
+                    
+                    button.textContent = 'Otomatik Atışı Başlat 🚀';
+                    button.classList.remove('button-auto-flip-active');
+                    
+                    mainFlipButton.disabled = false;
+                    secondaryButton.disabled = false;
+                    
+                    document.getElementById('result').textContent = "Otomatik atış durduruldu.";
+                }
+
+                console.log("[OTOMATİK ATAMA] Durdurma isteği işleniyor.");
+                return; 
+            } else {
+                // BAŞLATMA İŞLEMİ
+                isAutoFlipping = true; 
+                stopPending = false; // Başlatılırken durdurma isteği olmamalı
+                
+                button.textContent = 'Otomatik Atışı Durdur 🛑';
+                button.classList.add('button-auto-flip-active');
+                
+                // Otomatik modda manuel butonları kilitle
+                mainFlipButton.disabled = true; 
+                secondaryButton.disabled = true; 
+
+                document.getElementById('result').textContent = "Otomatik atış başladı...";
+
+                // Hemen bir atış yap ve ardından intervali başlat
+                flipCoin();
+                
+                autoFlipInterval = setInterval(() => {
+                    flipCoin();
+                }, FLIP_INTERVAL_MS);
+
+                console.log(`[OTOMATİK ATAMA] Otomatik atış başlatıldı.`);
+            }
+        }
+        
+        // Sonucu hemen gösteren fonksiyon (Sadece manuel kesintide kullanılır)
+        function showImmediateResult({ isManualInterruption = false } = {}) {
+            const coin = document.getElementById('coin');
+            const resultDisplay = document.getElementById('result');
+            
+            // Animasyonu durdur
+            coin.classList.remove('flip-animation');
+            
+            // Rastgele bir sonuç üret 
+            const outcomes = [
+                { text: "YAZI", emoji: "✍️", color: yaziColor, key: 'yazi' }, 
+                { text: "TURA", emoji: "👑", color: turaColor, key: 'tura' }
+            ];
+            
+            const randomIndex = Math.floor(Math.random() * outcomes.length); 
+            const finalResult = outcomes[randomIndex];
+            
+            // Skor Güncellemesi yap
+            if (finalResult.key === 'yazi') {
+                yaziCount++;
+            } else {
+                turaCount++;
+            }
+            totalCount++;
+            updateScoreBoard();
+
+            // Görünümü güncelle
+            coin.textContent = finalResult.emoji;
+            coin.style.backgroundColor = finalResult.color;
+            updateThemeColor(finalResult.color);
+            launchConfetti(finalResult.color, originalPrimaryColor);
+            playSound('Sonuç Gösterildi');
+
+            if (isManualInterruption) {
+                 resultDisplay.textContent = `🚀 Hızlı Sonuç: ${finalResult.text} geldi!`;
+                 
+                 // Butonları tekrar aktif et
+                 const mainFlipButton = document.querySelector('.button-main');
+                 const secondaryButton = document.querySelector('.button-secondary');
+                 const autoFlipButton = document.getElementById('auto-flip-button');
+                 
+                 mainFlipButton.disabled = false;
+                 secondaryButton.disabled = false;
+                 autoFlipButton.disabled = false;
+            }
+        }
+
 
         // --- SAF CSS KONFETİ ---
         function launchConfetti(color1, color2) {
@@ -519,9 +644,20 @@
             const resultDisplay = document.getElementById('result');
             const buttonMain = document.querySelector('.button-main');
             const buttonSecondary = document.querySelector('.button-secondary');
+            const autoFlipButton = document.getElementById('auto-flip-button');
             
+            // Eğer animasyon zaten çalışıyorsa:
+            if (coin.classList.contains('flip-animation')) {
+                // Sadece manuel butona basıldığında (otomatik modda değilken) hemen sonuç gösterilir
+                if (!isAutoFlipping) {
+                    clearTimeout(currentFlipTimeout);
+                    showImmediateResult({ isManualInterruption: true });
+                }
+                return;
+            }
+
             // Tek Atış Modu Kontrolü
-            if (gameMode === 'single' && totalCount >= 1) {
+            if (gameMode === 'single' && totalCount >= 1 && !isAutoFlipping) {
                  if (!confirm("Tek Atış modunda zaten bir sonuç var. Skoru sıfırlayıp yeniden başlamak ister misiniz?")) {
                     return; 
                  }
@@ -534,8 +670,19 @@
             coin.textContent = "🌀"; 
             coin.style.backgroundColor = originalSecondaryColor;
             
-            buttonMain.disabled = true;
-            buttonSecondary.disabled = true;
+            // Butonları devre dışı bırak
+            if (!isAutoFlipping) {
+                buttonMain.disabled = true;
+                buttonSecondary.disabled = true;
+                autoFlipButton.disabled = true; // Otomatik atış butonunu da kilitle
+            }
+            
+            // Otomatik atış devredeyse ve durdurma beklenmiyorsa, durdurma butonunu kilitle
+            if (isAutoFlipping && !stopPending) {
+                autoFlipButton.disabled = true;
+            }
+
+
             coin.classList.add('flip-animation');
             
             playSound('Fırlatma');
@@ -548,7 +695,9 @@
             const randomIndex = Math.floor(Math.random() * outcomes.length); 
             const finalResult = outcomes[randomIndex];
             
-            setTimeout(() => {
+            // Timeout ID'sini kaydet
+            currentFlipTimeout = setTimeout(() => {
+                // Animasyonu durdur
                 coin.classList.remove('flip-animation');
                 
                 coin.textContent = finalResult.emoji;
@@ -569,17 +718,50 @@
                 
                 totalCount++;
                 updateScoreBoard();
-
-                resultDisplay.textContent = `🎉 ${finalResult.text} geldi!`;
                 
-                buttonMain.disabled = false;
-                buttonSecondary.disabled = false;
+                // *** YENİ: Otomatik Durdurma Kontrolü ***
+                if (stopPending) {
+                    isAutoFlipping = false;
+                    stopPending = false;
+                    
+                    // Butonları manuele sıfırla
+                    autoFlipButton.textContent = 'Otomatik Atışı Başlat 🚀';
+                    autoFlipButton.classList.remove('button-auto-flip-active');
+                    autoFlipButton.disabled = false; // Durdurma butonunu serbest bırak
+
+                    buttonMain.disabled = false;
+                    buttonSecondary.disabled = false;
+
+                    resultDisplay.textContent = `🎉 ${finalResult.text} geldi! Otomatik atış durduruldu.`;
+                
+                } else {
+                    // Normal bitiş (Manuel veya otomatik devam ediyor)
+                    resultDisplay.textContent = `🎉 ${finalResult.text} geldi!`;
+
+                    // Animasyon bittikten sonra butonları tekrar etkinleştir (Sadece manuel moddaysa)
+                    if (!isAutoFlipping) {
+                        buttonMain.disabled = false;
+                        buttonSecondary.disabled = false;
+                        autoFlipButton.disabled = false;
+                    }
+                    
+                    // Otomatik mod devam ediyorsa
+                    if (isAutoFlipping) {
+                        autoFlipButton.disabled = false; 
+                    }
+                }
             }, 2500); 
         }
         
         // --- SKOR SIFIRLAMA ---
         function resetScore(askConfirmation = true, clearLocalStorage = false) {
-            if (askConfirmation && !confirm("Skor tablosunu sıfırlamak istediğinizden emin misiniz? Bu işlem kalıcı skoru da sıfırlayacaktır.")) {
+            
+            if (isAutoFlipping || stopPending) {
+                alert("Otomatik atış devredeyken veya durdurma beklenirken skoru sıfırlayamazsınız. Lütfen önce otomatik atışı durdurun.");
+                return;
+            }
+            
+            if (askConfirmation && !confirm("Skor tablosunu sıfırlamak istediğinizden emin misiniz?")) {
                 return;
             }
             
