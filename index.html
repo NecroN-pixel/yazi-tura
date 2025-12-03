@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yazı Tura Oyunu 👑 V 4.9.3 - Otomatik Durdurma Düzeltmesi</title>
+    <title>Çoklu Sonuç Oyunu 👑 V 5.0 - Mod Seçimi</title>
     <style>
         /*
         * --- CSS DEĞİŞKENLERİ (TEMA VE RENKLER) ---
@@ -11,8 +11,6 @@
         :root {
             --primary-color: #6c5ce7; 
             --secondary-color: #a29bfe; 
-            --yazi-color: #ff7675; 
-            --tura-color: #00b894; 
             --background-color: #f7f7f9;
             --card-color: #ffffff;
             --text-color: #2d3436;
@@ -27,34 +25,49 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; 
             min-height: 100vh;
             margin: 0;
+            padding: 20px 0;
             background-color: var(--background-color);
             color: var(--text-color);
-            padding: 20px 0;
             box-sizing: border-box;
             position: relative; 
-            transition: background-color var(--transition-speed) ease; 
             overflow-x: hidden; 
         }
 
-        /* Sürüm Numarası */
-        #version-display {
+        .header-top {
             position: fixed;
-            top: 15px;
-            right: 15px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--card-color);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 30;
+            box-sizing: border-box;
+        }
+
+        #menu-icon {
+            font-size: 1.8em;
+            cursor: pointer;
+            color: var(--primary-color);
+            padding: 5px;
+            transition: opacity 0.2s;
+        }
+
+        #version-display {
             font-size: 0.8em;
             color: #999;
             font-weight: 700;
-            background-color: #fff;
             padding: 5px 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            z-index: 20; 
         }
-
+        
         .container {
+            margin-top: 80px; 
             background-color: var(--card-color);
             padding: 30px 20px; 
             border-radius: 25px;
@@ -67,36 +80,6 @@
             border: 2px solid var(--primary-color);
             transition: border-color var(--transition-speed) ease;
             z-index: 10;
-            position: relative;
-        }
-        
-        /* Mod Seçimi Stilleri */
-        .mode-selection {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            background-color: var(--background-color);
-            padding: 5px;
-            border-radius: 10px;
-        }
-
-        .mode-button {
-            flex: 1;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 8px;
-            background-color: transparent;
-            color: var(--text-color);
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .mode-button.active {
-            background-color: var(--primary-color);
-            color: var(--card-color);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         #current-time {
@@ -111,10 +94,8 @@
             color: var(--primary-color);
             margin-bottom: 20px;
             font-size: 1.8em;
-            transition: color var(--transition-speed) ease;
         }
         
-        /* Para Stilleri */
         #coin {
             width: 120px;
             height: 120px;
@@ -149,10 +130,8 @@
             font-weight: 700;
             color: var(--primary-color);
             min-height: 30px;
-            transition: color var(--transition-speed) ease;
         }
         
-        /* Butonlar */
         .controls {
             display: flex;
             flex-direction: row; 
@@ -183,24 +162,6 @@
             color: var(--text-color);
             background-color: #dfe6e9; 
         }
-        
-        /* Devre dışı bırakılmış butonlar için şeffaflık */
-        .button-main:disabled, .button-secondary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Otomatik Atış Düğmesi için Özel Stil */
-        #auto-flip-button {
-            width: 100%;
-            margin-top: 15px;
-        }
-
-        .button-auto-flip-active {
-            background-color: var(--yazi-color) !important; 
-            color: var(--card-color) !important;
-            box-shadow: 0 4px 15px rgba(255, 118, 117, 0.4);
-        }
 
         .score-board {
             margin-top: 25px;
@@ -210,98 +171,229 @@
             border: 1px solid #dfe6e9;
         }
         
-        /* Dikey Skor Çubukları için Yeni Stiller */
         .score-line {
             display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #ccc;
+        }
+        .score-line:last-child {
+            border-bottom: none;
+        }
+        .score-info {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: space-between; 
-            margin-bottom: 5px;
-            font-size: 1.1em;
             font-weight: 600;
+            margin-bottom: 5px;
         }
-
-        .score-line span {
-            /* Yazı/Tura skoru */
-            margin-left: 5px;
-        }
-
         .score-bar-container {
+            height: 15px;
+            background-color: #e0e0e0;
+            border-radius: 7px;
+            overflow: hidden;
             display: flex;
             align-items: center;
-            gap: 5px;
         }
-
-        .score-bar {
-            width: 8px; /* Dikey çubuğun genişliği */
-            height: 30px; /* Maksimum yükseklik */
-            background-color: #ccc;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-            transform: translateY(2px); /* Metinle hizalamak için */
-        }
-        
         .score-bar-fill {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 0%; /* Başlangıç değeri */
-            transition: height 0.5s ease-in-out;
+            height: 100%;
+            transition: width 0.5s ease;
+            background-color: var(--primary-color); 
+            border-radius: 7px;
         }
-
-        #yazi-bar .score-bar-fill { background-color: var(--yazi-color); }
-        #tura-bar .score-bar-fill { background-color: var(--tura-color); }
-
         .percentage-display {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            font-weight: 500;
-            width: 40px; /* Yüzdeleri hizalamak için sabit genişlik */
-            text-align: right;
+            font-size: 0.8em;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-left: 10px;
         }
 
-        #yazi-score { color: var(--yazi-color); }
-        #tura-score { color: var(--tura-color); }
+        /* --- MENÜ VE MODAL STİLLERİ --- */
         
-        /* SAF CSS KONFETİ */
-        .confetti-container {
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 9; 
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: flex-end; 
+            z-index: 50;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
         }
 
-        .confetti-piece {
+        #side-menu-modal {
             position: absolute;
-            width: 10px;
-            height: 10px;
-            opacity: 0;
-            animation-duration: 3s;
-            animation-iteration-count: 1;
-            animation-fill-mode: forwards;
-            pointer-events: none;
+            top: 0;
+            right: 0;
+            width: 70%;
+            max-width: 300px;
+            height: 100%;
+            background-color: var(--card-color);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+            padding-top: 60px; 
+        }
+        
+        .modal-overlay.active #side-menu-modal {
+            transform: translateX(0);
         }
 
-        @keyframes fall {
-            0% { 
-                opacity: 1; 
-                transform: translate3d(0, -100px, 0) rotate(0deg); 
-            }
-            100% { 
-                opacity: 0; 
-                transform: translate3d(var(--x-end), 100vh, 0) rotate(var(--deg-end)); 
-            }
+        .menu-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .menu-item:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color);
         }
 
-        /* Footer Stili */
+        /* AYAR MODALI (CUSTOM MODE) */
+        #custom-modal-content {
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 380px;
+            margin: auto; 
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        /* İsim Girişi */
+        .form-input-row input[type="text"] {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        /* Emoji Girişi */
+        .emoji-input-box {
+            width: 40px; 
+            height: 40px;
+            padding: 0;
+            text-align: center;
+            font-size: 1.5em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            line-height: 40px;
+            box-sizing: border-box;
+            background-color: #f7f7f7;
+            cursor: pointer;
+        }
+        
+        .form-input-row input[type="color"] {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .delete-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2em;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+
+        #validation-message {
+            color: #e74c3c;
+            font-size: 0.9em;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+        
+        .add-outcome-button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .add-outcome-button:hover:not(:disabled) {
+            background-color: #8980f4;
+            color: white;
+        }
+        .add-outcome-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .button-auto-flip-active {
+            background-color: #f39c12 !important; 
+            color: var(--card-color) !important;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        }
+
         .footer {
             position: fixed;
             bottom: 0;
             width: 100%;
+            max-width: 400px;
             text-align: center;
             padding: 10px 0;
             background-color: #fff;
@@ -314,33 +406,54 @@
             justify-content: center;
             gap: 15px;
         }
-        
-        .footer a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
+
+        /* --- KONFETİ STİLLERİ --- */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            overflow: hidden; 
+            z-index: 40; 
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+            border-radius: 2px;
+            transform-style: preserve-3d;
+            will-change: transform, opacity;
         }
         
-        .footer a:hover {
-            color: var(--text-color);
-            text-decoration: underline;
+        /* Yeni Konfeti Animasyonu */
+        @keyframes confetti-fall {
+            0% { 
+                opacity: 1; 
+                transform: translate(var(--x-start), var(--y-start)) rotate(0deg); 
+            }
+            100% { 
+                opacity: 0.8; 
+                /* 100vh'ye doğru düşerken yatayda kayma */
+                transform: translate(calc(var(--x-end) + var(--x-start)), 100vh) rotate(var(--deg-end)); 
+            }
         }
     </style>
 </head>
 <body>
-    <div id="version-display"></div>
+    
+    <div class="header-top">
+        <span id="version-display"></span>
+        <i id="menu-icon" onclick="openMenu()">&#9776;</i> 
+    </div>
 
-    <div class="confetti-container" id="confetti-container"></div>
     <div class="container">
         <span id="current-time"></span> 
         
-        <h1>Coin Flip Game 🎉</h1>
-
-        <div class="mode-selection">
-            <button id="mode-single" class="mode-button active" onclick="setMode('single')">Tek Atış 🎯</button>
-            <button id="mode-series" class="mode-button" onclick="setMode('series')">Seri Atış 📊</button>
-        </div>
+        <h1>Çoklu Zar Atışı 🎉</h1>
 
         <div id="coin">?</div>
         
@@ -356,25 +469,45 @@
         </div>
         
         <div class="score-board">
-            <h2>📊 Skor Durumu</h2>
-            
-            <div class="score-line">
-                <div>Yazı (✍️): <span id="yazi-score">0</span></div>
-                <div class="score-bar-container">
-                    <div id="yazi-bar" class="score-bar"><div class="score-bar-fill"></div></div>
-                    <span id="yazi-percent" class="percentage-display">%0</span>
+            <h2>📊 Skor Durumu (<span id="active-outcome-count">2</span> Sonuç)</h2>
+            <div id="dynamic-score-lines">
                 </div>
-            </div>
-
-            <div class="score-line">
-                <div>Tura (👑): <span id="tura-score">0</span></div>
-                <div class="score-bar-container">
-                    <div id="tura-bar" class="score-bar"><div class="score-bar-fill"></div></div>
-                    <span id="tura-percent" class="percentage-display">%0</span>
-                </div>
-            </div>
-
             <p style="margin-top: 15px;">Toplam Atış: <span id="total-score">0</span></p>
+        </div>
+    </div>
+
+    <div class="confetti-container" id="confetti-container"></div>
+    
+    <div id="menu-modal" class="modal-overlay" onclick="closeMenu(event)">
+        <div id="side-menu-modal" onclick="event.stopPropagation()">
+             <div class="menu-item" onclick="setNormalMode()">
+                <span style="font-size:1.3em;">🎯</span> Normal Mod (Yazı/Tura)
+            </div>
+            <div class="menu-item" onclick="openCustomMode()">
+                <span style="font-size:1.3em;">✏️</span> Özel Mod (2-5 Sonuç Ayarla)
+            </div>
+            <div class="menu-item" onclick="closeMenu(); resetScore(true, true)">
+                <span style="font-size:1.3em;">🔄</span> Skorları Sıfırla
+            </div>
+        </div>
+    </div>
+    
+    <div id="custom-modal" class="modal-overlay" onclick="closeCustomMode(event)">
+        <div id="custom-modal-content" onclick="event.stopPropagation()">
+            <h2>✏️ Özel Sonuçları Ayarla (Min 2 / Max 5)</h2>
+            <p style="font-size:0.9em; color:#7f8c8d;">İsim: 2-20 karakter arası veya boş. Emoji: Sadece tek görsel simgeye izin verilir.</p>
+
+            <div id="outcome-inputs">
+                </div>
+            
+            <button id="add-outcome-btn" class="add-outcome-button" onclick="addOutcome()">+ Yeni Sonuç Ekle</button>
+            
+            <p id="validation-message"></p>
+
+            <div class="modal-buttons">
+                <button class="button-main" onclick="saveCustomNames()">Kaydet</button>
+                <button class="button-secondary" onclick="closeCustomMode()">İptal</button>
+            </div>
         </div>
     </div>
 
@@ -385,96 +518,404 @@
 
     <script>
         // --- SÜRÜM NUMARASI ---
-        const GAME_VERSION = "V 4.9.3"; 
+        const GAME_VERSION = "V 5.0"; 
 
         // --- GLOBAL DEĞİŞKENLER ---
-        let yaziCount = 0;
-        let turaCount = 0;
         let totalCount = 0;
-        let gameMode = 'series'; 
-        
         let isAutoFlipping = false;
         let autoFlipInterval; 
-        let stopPending = false; // YENİ BAYRAK: Durdurma isteği yapıldı, ancak atışın bitmesi bekleniyor.
+        let stopPending = false; 
         const FLIP_INTERVAL_MS = 3000; 
-        
         let currentFlipTimeout; 
 
         let originalPrimaryColor;
         let originalSecondaryColor;
-        let yaziColor;
-        let turaColor;
-
-        const STORAGE_KEY = 'coinFlipGameScore';
         
-        // --- BAŞLATMA VE HATA ÇÖZÜMÜ ---
+        const STORAGE_KEY_SCORE = 'coinFlipGameScoreV6'; // Storage key'lerindeki V6'yı, eski verileri korumak için değiştirmedim.
+        const STORAGE_KEY_NAMES = 'coinFlipCustomNamesV6';
+        
+        // Varsayılan Emoji ve Renk Seti
+        const EMOJI_SET = ['✍️', '👑', '⚖️', '🃏', '❌', '✨', '⚡', '⭐'];
+        const COLOR_SET = ['#ff7675', '#00b894', '#8e44ad', '#f1c40f', '#e74c3c', '#2c3e50', '#9b59b6', '#3498db'];
+
+        let activeOutcomes = []; 
+        let nextOutcomeId = 1; 
+        const DEFAULT_OUTCOMES = [
+            { id: 1, name: 'Yazı', emoji: EMOJI_SET[0], color: COLOR_SET[0], count: 0 },
+            { id: 2, name: 'Tura', emoji: EMOJI_SET[1], color: COLOR_SET[1], count: 0 }
+        ];
+
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        
         function initializeColors() {
             const rootStyle = getComputedStyle(document.documentElement);
             originalPrimaryColor = rootStyle.getPropertyValue('--primary-color').trim();
             originalSecondaryColor = rootStyle.getPropertyValue('--secondary-color').trim();
-            yaziColor = rootStyle.getPropertyValue('--yazi-color').trim();
-            turaColor = rootStyle.getPropertyValue('--tura-color').trim();
+        }
+
+        function loadOutcomes() {
+            const storedData = localStorage.getItem(STORAGE_KEY_NAMES);
+            if (storedData) {
+                activeOutcomes = JSON.parse(storedData);
+                // Eğer yüklenen sonuçlar boş veya 2'den az ise, varsayılana dön.
+                if (activeOutcomes.length < 2) {
+                    activeOutcomes = DEFAULT_OUTCOMES.slice();
+                    nextOutcomeId = 3;
+                    // Yeni varsayılan sonuçları hemen kaydet
+                    localStorage.setItem(STORAGE_KEY_NAMES, JSON.stringify(activeOutcomes.map(o => ({
+                        id: o.id,
+                        name: o.name,
+                        emoji: o.emoji,
+                        color: o.color,
+                        count: 0
+                    }))));
+                } else {
+                    const maxId = activeOutcomes.reduce((max, o) => Math.max(max, o.id), 0);
+                    nextOutcomeId = maxId + 1;
+                }
+            } else {
+                // Varsayılan 2 sonucu oluştur ve kaydet
+                activeOutcomes = DEFAULT_OUTCOMES.slice();
+                nextOutcomeId = 3;
+            }
+        }
+
+        function loadScore() {
+            const storedScore = localStorage.getItem(STORAGE_KEY_SCORE);
+            if (storedScore) {
+                const data = JSON.parse(storedScore);
+                totalCount = data.total || 0;
+                
+                activeOutcomes.forEach(outcome => {
+                    outcome.count = data.scores[outcome.id] || 0;
+                });
+            } else {
+                totalCount = 0;
+                activeOutcomes.forEach(o => o.count = 0);
+            }
         }
 
         function saveScore() {
             const scoreToStore = {
-                yazi: yaziCount,
-                tura: turaCount
+                total: totalCount,
+                scores: {}
             };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(scoreToStore));
+            activeOutcomes.forEach(outcome => {
+                scoreToStore.scores[outcome.id] = outcome.count;
+            });
+            localStorage.setItem(STORAGE_KEY_SCORE, JSON.stringify(scoreToStore));
         }
 
-        // --- MOD YÖNETİMİ ---
-        function setMode(mode) {
-            gameMode = mode;
-            document.getElementById('mode-single').classList.remove('active');
-            document.getElementById('mode-series').classList.remove('active');
-            document.getElementById(`mode-${mode}`).classList.add('active');
+        // --- YENİ FONKSİYON: NORMAL MODU AYARLAMA ---
+        window.setNormalMode = function() {
+            if (isAutoFlipping || stopPending) {
+                alert("Otomatik atış devredeyken mod değiştiremezsiniz.");
+                closeMenu();
+                return;
+            }
 
-            if (mode === 'single') {
-                document.getElementById('result').textContent = "Tek atış modu aktif. İyi şanslar!";
-            } else {
-                document.getElementById('result').textContent = "Seri atış modu aktif. İstediğiniz kadar atın.";
+            // Sonuçları varsayılan Yazı/Tura olarak ayarla
+            activeOutcomes = DEFAULT_OUTCOMES.slice(); 
+            nextOutcomeId = 3;
+
+            // LocalStorage'a kaydet (count'ları 0 olarak)
+            localStorage.setItem(STORAGE_KEY_NAMES, JSON.stringify(activeOutcomes.map(o => ({
+                id: o.id,
+                name: o.name,
+                emoji: o.emoji,
+                color: o.color,
+                count: 0 
+            }))));
+
+            resetScore(false, true); // Skoru sıfırla, LocalStorage'ı temizle
+            updateScoreBoard();
+            
+            document.getElementById('result').textContent = "🎯 Normal Mod: Yazı/Tura olarak ayarlandı!";
+            closeMenu();
+        }
+
+        // --- MODAL DİNLEYİCİLERİ ---
+
+        window.addOutcome = function() {
+            if (activeOutcomes.length >= 5) return;
+            
+            const newId = nextOutcomeId++;
+            const nextIndex = activeOutcomes.length;
+
+            const newOutcome = {
+                id: newId,
+                name: `Sonuç ${nextIndex + 1}`,
+                emoji: EMOJI_SET[nextIndex % EMOJI_SET.length],
+                color: COLOR_SET[nextIndex % COLOR_SET.length],
+                count: 0
+            };
+            
+            syncInputValuesToActiveOutcomes();
+            
+            activeOutcomes.push(newOutcome);
+            renderOutcomeInputs();
+        }
+
+        window.removeOutcome = function(idToRemove) {
+            if (activeOutcomes.length <= 2) {
+                document.getElementById('validation-message').textContent = "Hata: Minimum 2 sonuç olmalıdır.";
+                return;
+            }
+            
+            syncInputValuesToActiveOutcomes(); 
+
+            activeOutcomes = activeOutcomes.filter(o => o.id !== idToRemove);
+            renderOutcomeInputs();
+        }
+        
+        /**
+         * Sadece tek bir görsel karakter (grapheme cluster) girmesine izin verir
+         */
+        window.validateEmojiInput = function(inputElement) {
+            let value = inputElement.value;
+            const validationMessage = document.getElementById('validation-message');
+            const graphemes = Array.from(value);
+
+            validationMessage.textContent = "";
+
+            if (graphemes.length > 1) {
+                validationMessage.textContent = "Uyarı: Emoji alanına sadece TEK bir simge (görsel karakter) girebilirsiniz. Fazla giriş silindi.";
+                inputElement.value = graphemes[0]; 
+                setTimeout(() => validationMessage.textContent = "", 3000);
+                return;
+            }
+            
+            if (graphemes.length === 1) {
+                const singleGrapheme = graphemes[0];
+                const forbiddenTextRegex = /^[a-zA-Z0-9]+$/; 
+
+                if (forbiddenTextRegex.test(singleGrapheme)) {
+                    validationMessage.textContent = "Hata: Emoji alanına yazı veya rakam giremezsiniz. Girişiniz silindi.";
+                    inputElement.value = '';
+                    setTimeout(() => validationMessage.textContent = "", 3000);
+                }
+            }
+        }
+        
+        function syncInputValuesToActiveOutcomes() {
+            activeOutcomes.forEach(outcome => {
+                const nameInput = document.getElementById(`name-${outcome.id}`);
+                const colorInput = document.getElementById(`color-${outcome.id}`);
+                const emojiInput = document.getElementById(`emoji-${outcome.id}`);
+                
+                if (nameInput) outcome.name = nameInput.value.trim();
+                if (colorInput) outcome.color = colorInput.value;
+                if (emojiInput) outcome.emoji = emojiInput.value.trim();
+            });
+        }
+
+        function renderOutcomeInputs() {
+            const inputContainer = document.getElementById('outcome-inputs');
+            inputContainer.innerHTML = '';
+            
+            const addButton = document.getElementById('add-outcome-btn');
+            addButton.disabled = activeOutcomes.length >= 5;
+            addButton.textContent = activeOutcomes.length >= 5 ? 'Maksimum 5 Sonuç Ulaşıldı' : '+ Yeni Sonuç Ekle';
+            
+            activeOutcomes.forEach((outcome, index) => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                const isDeletable = index >= 2;
+                const deleteButtonHtml = isDeletable ? `<button class="delete-button" onclick="removeOutcome(${outcome.id})">x</button>` : `<span style="width:30px;"></span>`;
+                
+                const displayName = outcome.name.length > 0 && !outcome.name.startsWith('Sonuç ') ? outcome.name : '';
+
+                formGroup.innerHTML = `
+                    <label>Sonuç ${index + 1}:</label>
+                    <div class="form-input-row">
+                        <input type="text" 
+                               id="name-${outcome.id}" 
+                               maxlength="20" 
+                               placeholder="İsim (2-20 Karakter/Boş)" 
+                               value="${displayName}"
+                        >
+                        <input type="color" 
+                               id="color-${outcome.id}" 
+                               value="${outcome.color}"
+                        >
+                        <input type="text" 
+                               id="emoji-${outcome.id}" 
+                               class="emoji-input-box"
+                               placeholder="${outcome.emoji}" 
+                               value="${outcome.emoji}"
+                               onkeyup="validateEmojiInput(this)"
+                               onblur="validateEmojiInput(this)"
+                        >
+                        ${deleteButtonHtml}
+                    </div>
+                `;
+                inputContainer.appendChild(formGroup);
+            });
+            document.getElementById('validation-message').textContent = '';
+        }
+
+        // --- GLOBAL KAPSAMA ATANAN FONKSİYONLAR ---
+        
+        window.openMenu = function() {
+            document.getElementById('menu-modal').classList.add('active');
+        }
+
+        window.closeMenu = function(event) {
+            if (!event || event.target.id === 'menu-modal') {
+                document.getElementById('menu-modal').classList.remove('active');
             }
         }
 
-        // --- SES YERİNE KONSOL UYARISI ---
-        function playSound(soundType) {
-             console.log(`[SES] ${soundType} sesi tetiklendi.`);
+        window.openCustomMode = function() {
+            closeMenu();
+            // Normal Mod'dan Özel Mod'a geçerken, mevcut aktif sonuçları yeniden yükleyip gösterir.
+            // Eğer aktif sonuçlar Yazı/Tura ise, bunları düzenleyebilir.
+            loadOutcomes(); 
+            renderOutcomeInputs(); 
+            document.getElementById('custom-modal').classList.add('active');
+        }
+
+        window.closeCustomMode = function(event) {
+            if (!event || event.target.id === 'custom-modal') {
+                document.getElementById('custom-modal').classList.remove('active');
+                loadOutcomes(); // Değişiklik kaydedilmediyse, eski verileri geri yükle
+            }
+        }
+
+        window.saveCustomNames = function() {
+            const validationMessage = document.getElementById('validation-message');
+            const newActiveOutcomes = [];
+            const enteredNames = new Set();
+            const enteredEmojis = new Set();
+            
+            validationMessage.textContent = "";
+
+            activeOutcomes.forEach((config, index) => {
+                const inputName = document.getElementById(`name-${config.id}`).value.trim();
+                const inputColor = document.getElementById(`color-${config.id}`).value;
+                const inputEmoji = document.getElementById(`emoji-${config.id}`).value.trim();
+                
+                let finalName = inputName;
+                let finalEmoji = inputEmoji;
+                
+                // 1. İsim Kısıtlaması Kontrolü (Boş veya 2-20 karakter olmalı)
+                if (inputName.length > 0 && (inputName.length < 2 || inputName.length > 20)) {
+                    validationMessage.textContent = `Hata: Sonuç ${index + 1} ismi 2-20 karakter arasında olmalıdır veya boş bırakılmalıdır.`;
+                    return; 
+                }
+                
+                // 2. Emoji Kısıtlaması Kontrolü (Tek görsel karakter olmalı)
+                if (Array.from(finalEmoji).length !== 1) {
+                    validationMessage.textContent = `Hata: Sonuç ${index + 1} için **tek karakterli** bir görsel simge (emoji) girmelisiniz.`;
+                    return; 
+                }
+
+                // Tekrardan metin/rakam kontrolü (onkeyup/onblur atlanmış olabilir)
+                const forbiddenTextRegex = /^[a-zA-Z0-9]+$/; 
+                if (forbiddenTextRegex.test(finalEmoji)) {
+                    validationMessage.textContent = `Hata: Sonuç ${index + 1} için sadece emoji/simge kabul edilir. Yazı veya rakam giremezsiniz.`;
+                    return;
+                }
+                
+                // 3. İsim Çakışması Kontrolü (Boş olmayan isimler benzersiz olmalı)
+                if (finalName.length > 0) {
+                    if (enteredNames.has(finalName.toLowerCase())) {
+                        validationMessage.textContent = "Hata: Sonuç isimleri (boş olmayanlar) benzersiz olmalıdır.";
+                        return;
+                    }
+                    enteredNames.add(finalName.toLowerCase());
+                }
+                
+                // 4. Emoji Çakışması Kontrolü
+                if (enteredEmojis.has(finalEmoji)) {
+                    validationMessage.textContent = "Hata: Emojiler benzersiz olmalıdır.";
+                    return;
+                }
+                enteredEmojis.add(finalEmoji);
+
+                // İsim boşsa, varsayılan bir numara ata
+                if (finalName.length === 0) {
+                    finalName = `Sonuç ${index + 1}`;
+                }
+
+                // Yeni sonucu oluştur (count: 0 ile başlangıç)
+                newActiveOutcomes.push({
+                    id: config.id,
+                    name: finalName,
+                    emoji: finalEmoji, 
+                    color: inputColor,
+                    count: 0 
+                });
+            });
+            
+            if (validationMessage.textContent) return; 
+            
+            // Başarılı kaydetme
+            activeOutcomes = newActiveOutcomes;
+
+            // Sadece yapı verilerini kaydet (count değeri dahil). 
+            localStorage.setItem(STORAGE_KEY_NAMES, JSON.stringify(activeOutcomes.map(o => ({
+                id: o.id,
+                name: o.name,
+                emoji: o.emoji,
+                color: o.color,
+                count: 0 
+            }))));
+
+            resetScore(false, true); // Skorları tamamen sıfırla
+            updateScoreBoard();
+            
+            document.getElementById('result').textContent = `🎉 Özel Mod: ${activeOutcomes.length} adet sonuç başarıyla kaydedildi!`;
+            
+            closeCustomMode();
         }
         
-        // --- TEMA VE STİL GÜNCELLEME ---
         function updateThemeColor(color) {
             document.documentElement.style.setProperty('--primary-color', color);
             document.querySelector('.container').style.borderColor = color;
         }
 
-        // --- YÜZDELİK DİKEY ÇUBUKLAR GÜNCELLEME ---
-        function updateVerticalBars() {
-            const yaziFill = document.querySelector('#yazi-bar .score-bar-fill');
-            const turaFill = document.querySelector('#tura-bar .score-bar-fill');
-            const yaziPercentDisplay = document.getElementById('yazi-percent');
-            const turaPercentDisplay = document.getElementById('tura-percent');
+        function updateScoreBoard() {
+            const scoreContainer = document.getElementById('dynamic-score-lines');
+            scoreContainer.innerHTML = '';
+            
+            document.getElementById('total-score').textContent = totalCount;
+            document.getElementById('active-outcome-count').textContent = activeOutcomes.length;
 
             if (totalCount === 0) {
-                yaziFill.style.height = '0%';
-                turaFill.style.height = '0%';
-                yaziPercentDisplay.textContent = '%0';
-                turaPercentDisplay.textContent = '%0';
+                scoreContainer.innerHTML = `<p style="text-align:center; color:#999;">Henüz atış yapılmadı.</p>`;
                 return;
             }
 
-            const yaziPercentage = (yaziCount / totalCount) * 100;
-            const turaPercentage = (turaCount / totalCount) * 100;
+            activeOutcomes.forEach(outcome => {
+                // NaN hatasını engellemek için, count undefined/NaN ise 0 kullan
+                const count = isNaN(outcome.count) ? 0 : outcome.count;
 
-            yaziFill.style.height = `${yaziPercentage}%`;
-            turaFill.style.height = `${turaPercentage}%`;
-
-            yaziPercentDisplay.textContent = `%${Math.round(yaziPercentage)}`;
-            turaPercentDisplay.textContent = `%${Math.round(turaPercentage)}`;
+                const percentage = totalCount > 0 ? (count / totalCount) * 100 : 0;
+                
+                const scoreLine = document.createElement('div');
+                scoreLine.className = 'score-line';
+                scoreLine.innerHTML = `
+                    <div class="score-info">
+                        <div>
+                            <span style="font-size:1.2em;">${outcome.emoji}</span> 
+                            ${outcome.name}: 
+                            <span style="color:${outcome.color};">${count}</span>
+                        </div>
+                        <span class="percentage-display">%${Math.round(percentage)}</span>
+                    </div>
+                    <div class="score-bar-container">
+                        <div class="score-bar-fill" style="width: ${percentage}%; background-color: ${outcome.color};"></div>
+                    </div>
+                `;
+                scoreContainer.appendChild(scoreLine);
+            });
+            
+            saveScore();
         }
-        
-        // --- SAAT ---
+
         function updateTime() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -482,282 +923,130 @@
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
         }
-
-        // --- SKOR GÜNCELLEME ---
-        function updateScoreBoard() {
-            document.getElementById('yazi-score').textContent = yaziCount;
-            document.getElementById('tura-score').textContent = turaCount;
-            document.getElementById('total-score').textContent = totalCount;
-            saveScore();
-            updateVerticalBars(); // Dikey çubukları güncelle
-        }
         
-        // Otomatik Atışı Başlat/Durdur
-        function toggleAutoFlip() {
-            const coin = document.getElementById('coin');
-            const button = document.getElementById('auto-flip-button');
-            const mainFlipButton = document.querySelector('.button-main');
-            const secondaryButton = document.querySelector('.button-secondary'); 
-
-            if (isAutoFlipping) {
-                // *** DURDURMA İŞLEMİ (Kullanıcının istediği mantık burada) ***
-                clearInterval(autoFlipInterval); // Intervali durdur (Yeni atış gelmeyecek)
-                
-                const isCurrentlyFlipping = coin.classList.contains('flip-animation');
-
-                if (isCurrentlyFlipping) {
-                    // 1. Animasyon varsa: bitmesini bekle ve sonra dur
-                    stopPending = true; // Bayrağı ayarla
-                    
-                    button.textContent = 'Lütfen Bekleyiniz... ⏳';
-                    button.disabled = true; // Durdurma butonunu bekleme moduna al
-                    document.getElementById('result').textContent = "Mevcut atışın sonucu bekleniyor...";
-                    
-                    mainFlipButton.disabled = true; // Diğer butonlar da kilitli kalsın
-                    secondaryButton.disabled = true;
-
-                } else {
-                    // 2. Animasyon yoksa: hemen durdur
-                    isAutoFlipping = false; 
-                    
-                    button.textContent = 'Otomatik Atışı Başlat 🚀';
-                    button.classList.remove('button-auto-flip-active');
-                    
-                    mainFlipButton.disabled = false;
-                    secondaryButton.disabled = false;
-                    
-                    document.getElementById('result').textContent = "Otomatik atış durduruldu.";
-                }
-
-                console.log("[OTOMATİK ATAMA] Durdurma isteği işleniyor.");
-                return; 
-            } else {
-                // BAŞLATMA İŞLEMİ
-                isAutoFlipping = true; 
-                stopPending = false; // Başlatılırken durdurma isteği olmamalı
-                
-                button.textContent = 'Otomatik Atışı Durdur 🛑';
-                button.classList.add('button-auto-flip-active');
-                
-                // Otomatik modda manuel butonları kilitle
-                mainFlipButton.disabled = true; 
-                secondaryButton.disabled = true; 
-
-                document.getElementById('result').textContent = "Otomatik atış başladı...";
-
-                // Hemen bir atış yap ve ardından intervali başlat
-                flipCoin();
-                
-                autoFlipInterval = setInterval(() => {
-                    flipCoin();
-                }, FLIP_INTERVAL_MS);
-
-                console.log(`[OTOMATİK ATAMA] Otomatik atış başlatıldı.`);
-            }
-        }
-        
-        // Sonucu hemen gösteren fonksiyon (Sadece manuel kesintide kullanılır)
-        function showImmediateResult({ isManualInterruption = false } = {}) {
+        window.flipCoin = function() {
             const coin = document.getElementById('coin');
             const resultDisplay = document.getElementById('result');
-            
-            // Animasyonu durdur
-            coin.classList.remove('flip-animation');
-            
-            // Rastgele bir sonuç üret 
-            const outcomes = [
-                { text: "YAZI", emoji: "✍️", color: yaziColor, key: 'yazi' }, 
-                { text: "TURA", emoji: "👑", color: turaColor, key: 'tura' }
-            ];
-            
-            const randomIndex = Math.floor(Math.random() * outcomes.length); 
-            const finalResult = outcomes[randomIndex];
-            
-            // Skor Güncellemesi yap
-            if (finalResult.key === 'yazi') {
-                yaziCount++;
-            } else {
-                turaCount++;
-            }
-            totalCount++;
-            updateScoreBoard();
-
-            // Görünümü güncelle
-            coin.textContent = finalResult.emoji;
-            coin.style.backgroundColor = finalResult.color;
-            updateThemeColor(finalResult.color);
-            launchConfetti(finalResult.color, originalPrimaryColor);
-            playSound('Sonuç Gösterildi');
-
-            if (isManualInterruption) {
-                 resultDisplay.textContent = `🚀 Hızlı Sonuç: ${finalResult.text} geldi!`;
-                 
-                 // Butonları tekrar aktif et
-                 const mainFlipButton = document.querySelector('.button-main');
-                 const secondaryButton = document.querySelector('.button-secondary');
-                 const autoFlipButton = document.getElementById('auto-flip-button');
-                 
-                 mainFlipButton.disabled = false;
-                 secondaryButton.disabled = false;
-                 autoFlipButton.disabled = false;
-            }
-        }
-
-
-        // --- SAF CSS KONFETİ ---
-        function launchConfetti(color1, color2) {
-            const container = document.getElementById('confetti-container');
-            const colors = [color1, color2, '#fff', '#aaa'];
-            
-            for (let i = 0; i < 50; i++) { 
-                const piece = document.createElement('div');
-                piece.className = 'confetti-piece';
-                
-                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                piece.style.left = `${Math.random() * 100}vw`; 
-                piece.style.top = `${-20}px`; 
-                piece.style.width = `${Math.random() * 8 + 4}px`; 
-                piece.style.height = piece.style.width;
-
-                const xEnd = Math.random() * 200 - 100;
-                const degEnd = Math.random() * 900 + 360; 
-                
-                piece.style.setProperty('--x-end', `${xEnd}px`);
-                piece.style.setProperty('--deg-end', `${degEnd}deg`);
-                
-                const duration = Math.random() * 1.5 + 2.5;
-                const delay = Math.random() * 0.5;
-                
-                piece.style.animation = `fall ${duration}s ease-out ${delay}s forwards`;
-                
-                container.appendChild(piece);
-                
-                setTimeout(() => {
-                    piece.remove();
-                }, (duration + delay) * 1000);
-            }
-        }
-        
-        // --- PARAYI ATMA FONKSİYONU ---
-        function flipCoin() {
-            const coin = document.getElementById('coin');
-            const resultDisplay = document.getElementById('result');
-            const buttonMain = document.querySelector('.button-main');
-            const buttonSecondary = document.querySelector('.button-secondary');
+            const buttonMain = document.querySelector('.controls .button-main');
+            const buttonSecondary = document.querySelector('.controls .button-secondary');
             const autoFlipButton = document.getElementById('auto-flip-button');
             
-            // Eğer animasyon zaten çalışıyorsa:
             if (coin.classList.contains('flip-animation')) {
-                // Sadece manuel butona basıldığında (otomatik modda değilken) hemen sonuç gösterilir
-                if (!isAutoFlipping) {
-                    clearTimeout(currentFlipTimeout);
-                    showImmediateResult({ isManualInterruption: true });
-                }
                 return;
             }
 
-            // Tek Atış Modu Kontrolü
-            if (gameMode === 'single' && totalCount >= 1 && !isAutoFlipping) {
-                 if (!confirm("Tek Atış modunda zaten bir sonuç var. Skoru sıfırlayıp yeniden başlamak ister misiniz?")) {
-                    return; 
-                 }
-                 resetScore(false, true); 
+            if (activeOutcomes.length < 2) {
+                alert("Lütfen menüden Normal veya Özel Mod'u seçerek en az 2 sonuç tanımlayın!");
+                return;
             }
 
             updateThemeColor(originalPrimaryColor);
-
             resultDisplay.textContent = "Havada dönüyor...";
             coin.textContent = "🌀"; 
             coin.style.backgroundColor = originalSecondaryColor;
             
-            // Butonları devre dışı bırak
             if (!isAutoFlipping) {
                 buttonMain.disabled = true;
                 buttonSecondary.disabled = true;
-                autoFlipButton.disabled = true; // Otomatik atış butonunu da kilitle
+                autoFlipButton.disabled = true; 
             }
-            
-            // Otomatik atış devredeyse ve durdurma beklenmiyorsa, durdurma butonunu kilitle
             if (isAutoFlipping && !stopPending) {
                 autoFlipButton.disabled = true;
             }
 
-
             coin.classList.add('flip-animation');
             
-            playSound('Fırlatma');
+            const winnerIndex = Math.floor(Math.random() * activeOutcomes.length); 
+            const finalResult = activeOutcomes[winnerIndex];
             
-            const outcomes = [
-                { text: "YAZI", emoji: "✍️", color: yaziColor, key: 'yazi' }, 
-                { text: "TURA", emoji: "👑", color: turaColor, key: 'tura' }
-            ];
-            
-            const randomIndex = Math.floor(Math.random() * outcomes.length); 
-            const finalResult = outcomes[randomIndex];
-            
-            // Timeout ID'sini kaydet
             currentFlipTimeout = setTimeout(() => {
-                // Animasyonu durdur
                 coin.classList.remove('flip-animation');
                 
                 coin.textContent = finalResult.emoji;
                 coin.style.backgroundColor = finalResult.color;
-                
                 updateThemeColor(finalResult.color);
                 
-                // Skor Güncellemesi
-                if (finalResult.key === 'yazi') {
-                    yaziCount++;
-                    launchConfetti(yaziColor, originalPrimaryColor);
-                    playSound('YAZI Sonucu');
-                } else {
-                    turaCount++;
-                    launchConfetti(turaColor, originalPrimaryColor);
-                    playSound('TURA Sonucu');
-                }
-                
+                // count değeri undefined/NaN ise 0 kabul et
+                finalResult.count = (isNaN(finalResult.count) ? 0 : finalResult.count) + 1;
                 totalCount++;
+                
+                launchConfetti(finalResult.color, originalPrimaryColor);
+                
                 updateScoreBoard();
                 
-                // *** YENİ: Otomatik Durdurma Kontrolü ***
                 if (stopPending) {
                     isAutoFlipping = false;
                     stopPending = false;
-                    
-                    // Butonları manuele sıfırla
                     autoFlipButton.textContent = 'Otomatik Atışı Başlat 🚀';
                     autoFlipButton.classList.remove('button-auto-flip-active');
-                    autoFlipButton.disabled = false; // Durdurma butonunu serbest bırak
-
+                    autoFlipButton.disabled = false; 
                     buttonMain.disabled = false;
-                    buttonSecondary.disabled = false;
-
-                    resultDisplay.textContent = `🎉 ${finalResult.text} geldi! Otomatik atış durduruldu.`;
-                
+                    secondaryButton.disabled = false;
+                    resultDisplay.textContent = `🎉 ${finalResult.name} geldi! Otomatik atış durduruldu.`;
                 } else {
-                    // Normal bitiş (Manuel veya otomatik devam ediyor)
-                    resultDisplay.textContent = `🎉 ${finalResult.text} geldi!`;
-
-                    // Animasyon bittikten sonra butonları tekrar etkinleştir (Sadece manuel moddaysa)
+                    resultDisplay.textContent = `🎉 ${finalResult.name} geldi!`;
                     if (!isAutoFlipping) {
                         buttonMain.disabled = false;
                         buttonSecondary.disabled = false;
                         autoFlipButton.disabled = false;
                     }
-                    
-                    // Otomatik mod devam ediyorsa
                     if (isAutoFlipping) {
                         autoFlipButton.disabled = false; 
                     }
                 }
             }, 2500); 
         }
+
+        window.toggleAutoFlip = function() {
+             if (activeOutcomes.length < 2) {
+                alert("Lütfen menüden Normal veya Özel Mod'u seçerek en az 2 sonuç tanımlayın!");
+                return;
+            }
+            
+            const coin = document.getElementById('coin');
+            const button = document.getElementById('auto-flip-button');
+            const mainFlipButton = document.querySelector('.controls .button-main');
+            const secondaryButton = document.querySelector('.controls .button-secondary'); 
+
+            if (isAutoFlipping) {
+                clearInterval(autoFlipInterval); 
+                const isCurrentlyFlipping = coin.classList.contains('flip-animation');
+
+                if (isCurrentlyFlipping) {
+                    stopPending = true; 
+                    button.textContent = 'Lütfen Bekleyiniz... ⏳';
+                    button.disabled = true; 
+                    document.getElementById('result').textContent = "Mevcut atışın sonucu bekleniyor...";
+                    mainFlipButton.disabled = true;
+                    secondaryButton.disabled = true;
+                } else {
+                    isAutoFlipping = false; 
+                    button.textContent = 'Otomatik Atışı Başlat 🚀';
+                    button.classList.remove('button-auto-flip-active');
+                    mainFlipButton.disabled = false;
+                    secondaryButton.disabled = false;
+                    document.getElementById('result').textContent = "Otomatik atış durduruldu.";
+                }
+                return; 
+            } else {
+                isAutoFlipping = true; 
+                stopPending = false; 
+                button.textContent = 'Otomatik Atışı Durdur 🛑';
+                button.classList.add('button-auto-flip-active');
+                mainFlipButton.disabled = true; 
+                secondaryButton.disabled = true; 
+                document.getElementById('result').textContent = "Otomatik atış başladı...";
+                flipCoin();
+                autoFlipInterval = setInterval(() => {
+                    flipCoin();
+                }, FLIP_INTERVAL_MS);
+            }
+        }
         
-        // --- SKOR SIFIRLAMA ---
-        function resetScore(askConfirmation = true, clearLocalStorage = false) {
+        window.resetScore = function(askConfirmation = true, clearLocalStorage = false) {
             
             if (isAutoFlipping || stopPending) {
-                alert("Otomatik atış devredeyken veya durdurma beklenirken skoru sıfırlayamazsınız. Lütfen önce otomatik atışı durdurun.");
+                alert("Otomatik atış devredeyken skoru sıfırlayamazsınız.");
                 return;
             }
             
@@ -765,15 +1054,14 @@
                 return;
             }
             
-            yaziCount = 0;
-            turaCount = 0;
             totalCount = 0;
-            
-            updateScoreBoard();
+            activeOutcomes.forEach(outcome => outcome.count = 0);
             
             if (clearLocalStorage) {
-                 localStorage.removeItem(STORAGE_KEY);
+                 localStorage.removeItem(STORAGE_KEY_SCORE);
             }
+            
+            updateScoreBoard(); 
             
             updateThemeColor(originalPrimaryColor);
 
@@ -781,23 +1069,76 @@
             document.getElementById('coin').textContent = "?"; 
             document.getElementById('coin').style.backgroundColor = originalSecondaryColor;
         }
+        
+        /**
+         * YENİ KONFETİ SİSTEMİ
+         */
+        function launchConfetti(color1, color2) {
+            const container = document.getElementById('confetti-container');
+            const colors = [color1, color2, originalPrimaryColor, originalSecondaryColor, '#fff', '#aaa'];
+            
+            const coinRect = document.getElementById('coin').getBoundingClientRect();
+            const startX = coinRect.left + coinRect.width / 2;
+            const startY = coinRect.top + coinRect.height / 2;
 
-        // --- SAYFA YÜKLENİNCE BAŞLATMA (Garantili Başlangıç) ---
+            const confettiCount = 60; 
+            
+            for (let i = 0; i < confettiCount; i++) { 
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Paranın merkezi
+                piece.style.left = `${startX}px`;
+                piece.style.top = `${startY}px`;
+
+                const size = Math.random() * 8 + 4;
+                piece.style.width = `${size}px`; 
+                piece.style.height = `${size}px`;
+                
+                // Yatay ve dikey fırlatma mesafesi (CSS değişkenleri)
+                const horizontalBlast = Math.random() * 300 - 150; 
+                const verticalBlast = Math.random() * -150 - 50; 
+                
+                piece.style.setProperty('--x-start', '0px');
+                piece.style.setProperty('--y-start', '0px');
+                piece.style.setProperty('--x-end', `${horizontalBlast}px`);
+                piece.style.setProperty('--y-end', `${verticalBlast}px`); // (Kullanılmıyor, ancak gelecekteki değişiklik için tutuldu)
+
+                // CSS Animasyonunun dönme derecesi
+                const degEnd = Math.random() * 1800 + 720; 
+                piece.style.setProperty('--deg-end', `${degEnd}deg`);
+
+                const duration = Math.random() * 1.5 + 3.0;
+                const delay = Math.random() * 0.1;
+                
+                // Animasyon: confetti-fall
+                piece.style.animation = `confetti-fall ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}s forwards`;
+                
+                container.appendChild(piece);
+                
+                // Temizlik
+                setTimeout(() => {
+                    piece.remove();
+                }, (duration + delay) * 1000);
+            }
+        }
+
+
+        // --- SAYFA YÜKLENİNCE BAŞLATMA ---
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('version-display').textContent = GAME_VERSION; 
 
+            loadOutcomes(); 
             initializeColors(); 
-            
-            // Skorları sıfırla ve Local Storage'dan yükleme yapma (temiz başlangıç)
-            yaziCount = 0;
-            turaCount = 0;
-            totalCount = 0;
+            loadScore(); 
             
             updateScoreBoard(); 
+            
             updateTime(); 
             setInterval(updateTime, 1000); 
             updateThemeColor(originalPrimaryColor);
-            setMode('series');
             
             document.getElementById('coin').textContent = "?";
             document.getElementById('coin').style.backgroundColor = originalSecondaryColor;
